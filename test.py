@@ -43,6 +43,7 @@ class Waiter:
             sleep(1)
             if condition():
                 return True
+            print "waiting..."
         return False
 
     @classmethod 
@@ -52,8 +53,13 @@ class Waiter:
     @classmethod
     def host_is_up(cls,api,host):
         host = cls.refresh_host(api,host)
-        print "waiting..."
         return host.get_status().get_state() == 'up'
+
+    @classmethod
+    def host_is_maintanence(cls,api,host):
+        host = cls.refresh_host(api,host)
+        print "in state %(current_state)s waiting for %(state)s" % {"current_state": host.get_status().get_state(), "state": "maintenance"}
+        return host.get_status().get_state() == 'maintenance'
 
 class ParamFactory:
     def create_datacenter(self, name="mydatacenter", description="hi", storage_type="posixfs", version=None):
@@ -104,48 +110,33 @@ class FixtureFactory:
         return api.hosts.get(params.get_name()) or api.hosts.add(params)
 
     def create_volume(self,cluster,params):
-        import pdb; pdb.set_trace()
         return cluster.glustervolumes.add(params)
 
 
 class TestVolume(unittest.TestCase):
     def setUp(self):
-        self.api = ApiFactory().get_api()
+        self.api        = ApiFactory().get_api()
         self.datacenter = FixtureFactory().create_datacenter(self.api)
-        self.cluster = FixtureFactory().create_cluster(api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
-        self.host = FixtureFactory().create_host(self.api, self.cluster, 'myhost', 'rhevm-sf101-node-a')
+        self.cluster    = FixtureFactory().create_cluster(self.api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
+        self.host       = FixtureFactory().create_host(self.api, self.cluster, 'myhost', 'rhevm-sf101-node-a')
         Waiter.waitUntil(lambda : Waiter.host_is_up(self.api,self.host), 200)
 
     def tearDown(self):
-        import pdb; pdb.set_trace()
-        self.host.deactivate()
-        self.host.delete()
-        self.cluster.delete()
-        self.datacenter.delete()
+        #import pdb; pdb.set_trace()
+        #self.host.deactivate()
+        #Waiter.waitUntil(lambda : Waiter.host_is_maintanence(self.api,self.host), 200)
+        #import pdb; pdb.set_trace()
+        #self.host.delete()
+        #self.cluster.delete()
+        #self.datacenter.delete()
         self.api.disconnect()
 
     def test_create_distributed_volume(self):
-        import pdb; pdb.set_trace()
-        brick = FixtureFactory().create_brick(self.host,'/tmp/brick')
-        bricks = FixtureFactory().create_bricks(brick)
-        return FixtureFactory().create_volume(self.cluster, bricks, 'myvolume')
-
-#if __name__ == '__main__':
-#            unittest.main()
-api = ApiFactory().get_api()
-#host = api.hosts.get('myhost')
-#Waiter.waitUntil(lambda : Waiter.host_is_up(api,host), 100)
-datacenter = FixtureFactory().create_datacenter(api)
-cluster = FixtureFactory().create_cluster(api,params=ParamFactory().create_cluster(datacenter_broker=datacenter))
-host = FixtureFactory().create_host(api, cluster, 'myhost', 'rhevm-sf101-node-a')
+        brick = ParamFactory().create_brick(self.host.id,'/tmp/brick2')
+        bricks = ParamFactory().create_bricks(brick)
+        volparams = ParamFactory().create_volume(bricks,'myvol')
+        return FixtureFactory().create_volume(self.cluster, volparams)
 
 
-brick = ParamFactory().create_brick(host.id,'/tmp/bricky')
-bricks = ParamFactory().create_bricks(brick)
-#brick = params.GlusterBrick(server_id=host.id, brick_dir='/tmp/brick')
-#bricks = params.GlusterBricks()
-#bricks.add_brick(brick)
-import pdb; pdb.set_trace()
-volparams = ParamFactory().create_volume(bricks,'myvol')
-volume = FixtureFactory().create_volume(cluster,volparams)
-
+if __name__ == '__main__':
+            unittest.main()
