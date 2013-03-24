@@ -3,6 +3,8 @@ from ovirtsdk.xml import params
 
 from ovirtsdk.api import API
 from ovirtsdk.infrastructure.brokers import ClusterGlusterVolumes
+from time import gmtime, strftime
+
 
 #VERSION = params.Version(major='3', minor='1')
 
@@ -28,6 +30,7 @@ from ovirtsdk.infrastructure.brokers import ClusterGlusterVolumes
 import unittest2 as unittest
 
 from time import sleep
+import datetime
 
 class ApiFactory:
     def api(self,api_actions):
@@ -41,11 +44,11 @@ class ApiFactory:
 class Waiter:
     @classmethod
     def waitUntil(cls,condition, attempts=10):
+        print "waiting..." + condition.__name__
         for _ in range(attempts):
             sleep(1)
             if condition():
                 return True
-            print "waiting..."
         return False
 
     @classmethod 
@@ -86,7 +89,7 @@ class ParamFactory:
     def create_host(self, cluster_broker,name, host, root_password="redhat"):
         return params.Host(name=name, address=host, cluster=cluster_broker, root_password="redhat" )
 
-    def create_brick(self,host_id,dir):
+    def create_brick(self,host_id,dir=datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f")):
         return params.GlusterBrick(server_id=host_id, brick_dir=dir)
 
     def create_bricks(self,*bricks):
@@ -111,8 +114,7 @@ class Cluster:
 class Host:
     @classmethod
     def create(cls,api,params):
-        return api.hosts.add(params)
-
+        return api.hosts.add(params) 
     @classmethod 
     def refresh(cls,api,host):
         return api.hosts.get(id=host.id)
@@ -163,7 +165,7 @@ class TestVolume(unittest.TestCase):
         self.api.disconnect()
 
     def test_create_distributed_volume(self):
-        brick = ParamFactory().create_brick(self.host.id,'/tmp/brick233243ewrdssfsdwsdfade')
+        brick = ParamFactory().create_brick(self.host.id)
         bricks = ParamFactory().create_bricks(brick)
         volparams = ParamFactory().create_volume(bricks,'myvol2')
         vol = FixtureFactory().create_volume(self.cluster, volparams)
