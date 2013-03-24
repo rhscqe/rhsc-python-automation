@@ -24,7 +24,9 @@ from ovirtsdk.infrastructure.brokers import ClusterGlusterVolumes
 #bricks.add_brick(brick)
 #api.clusters.get("mycluster").glustervolumes.add(params.GlusterVolume(name="myvolume", volume_type="DISTRIBUTE", bricks=bricks))
 
-import unittest
+#import unittest so old guise
+import unittest2 as unittest
+
 from time import sleep
 
 class ApiFactory:
@@ -96,21 +98,44 @@ class ParamFactory:
     def create_volume(self,bricks, name, volume_type="DISTRIBUTE"):
         return params.GlusterVolume(name=name, volume_type="DISTRIBUTE", bricks=bricks)
 
+class Datacenter:
+    @classmethod
+    def create(cls,api,params=ParamFactory().create_datacenter()):
+        return api.datacenters.add(params) 
+
+class Cluster:
+    @classmethod
+    def create(cls,api,params=ParamFactory().create_cluster()):
+        return api.clusters.add(params)
+
+class Host:
+    @classmethod
+    def create(cls,api,params):
+        return api.hosts.add(params)
+
+    @classmethod 
+    def refresh(cls,api,host):
+        return api.hosts.get(id=host.id)
+
+class Volume:
+    @classmethod
+    def create(cls,cluster,params):
+        return cluster.glustervolumes.add(params)
+
+
 
 class FixtureFactory:
-    VERSION = params.Version(major='3', minor='1')
     def create_datacenter(self,api,params=ParamFactory().create_datacenter()):
-        return api.datacenters.get(params.get_name()) or api.datacenters.add(params) 
+        return api.datacenters.get(params.get_name()) or Datacenter.create(api,params)
 
     def create_cluster(self,api,params=ParamFactory().create_cluster()):
-        return api.clusters.get(params.get_name()) or api.clusters.add(params)
+        return api.clusters.get(params.get_name()) or Cluster.create(api,params)
 
-    def create_host(self,api, cluster, name, host, root_password="redhat"):
-        params = ParamFactory().create_host(cluster,name,host, root_password=root_password)
-        return api.hosts.get(params.get_name()) or api.hosts.add(params)
+    def create_host(self,api, params):
+        return api.hosts.get(params.get_name()) or Host.create(api,params)
 
     def create_volume(self,cluster,params):
-        return cluster.glustervolumes.add(params)
+        return Volume.create(cluster,params)
 
 
 class TestVolume(unittest.TestCase):
@@ -118,24 +143,31 @@ class TestVolume(unittest.TestCase):
         self.api        = ApiFactory().get_api()
         self.datacenter = FixtureFactory().create_datacenter(self.api)
         self.cluster    = FixtureFactory().create_cluster(self.api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
-        self.host       = FixtureFactory().create_host(self.api, self.cluster, 'myhost', 'rhevm-sf101-node-a')
-        Waiter.waitUntil(lambda : Waiter.host_is_up(self.api,self.host), 200)
+        self.host       = FixtureFactory().create_host(self.api, ParamFactory().create_host(self.cluster,"myhost","rhevm-sf101-node-a"))
+        Waiter.waitUntil(lambda : Waiter.host_is_up(self.api,self.host), 400)
+        self.host2       = FixtureFactory().create_host(self.api, ParamFactory().create_host(self.cluster,"myhost2","rhevm-sf101-node-b"))
+        Waiter.waitUntil(lambda : Waiter.host_is_up(self.api,self.host2), 400)
+        self.host2 = self.api.hosts.get(id=self.host2.id)
+        self.assertEqual(self.host2.get_status().get_state(), "up")
 
     def tearDown(self):
-        #import pdb; pdb.set_trace()
-        #self.host.deactivate()
-        #Waiter.waitUntil(lambda : Waiter.host_is_maintanence(self.api,self.host), 200)
-        #import pdb; pdb.set_trace()
-        #self.host.delete()
-        #self.cluster.delete()
-        #self.datacenter.delete()
+        import pdb; pdb.set_trace()
+        self.host.deactivate()
+        Waiter.waitUntil(lambda : Waiter.host_is_maintanence(self.api,self.host), 200)
+        self.host.delete()
+        self.host2.deactivate()
+        Waiter.waitUntil(lambda : Waiter.host_is_maintanence(self.api,self.host2), 200)
+        self.host2.delete()
+        self.cluster.delete()
+        self.datacenter.delete()
         self.api.disconnect()
 
     def test_create_distributed_volume(self):
-        brick = ParamFactory().create_brick(self.host.id,'/tmp/brick2')
+        brick = ParamFactory().create_brick(self.host.id,'/tmp/brick233243ewrdssfsdwsdfade')
         bricks = ParamFactory().create_bricks(brick)
-        volparams = ParamFactory().create_volume(bricks,'myvol')
-        return FixtureFactory().create_volume(self.cluster, volparams)
+        volparams = ParamFactory().create_volume(bricks,'myvol2')
+        vol = FixtureFactory().create_volume(self.cluster, volparams)
+        vol.delete()
 
 
 if __name__ == '__main__':
