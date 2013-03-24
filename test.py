@@ -28,6 +28,7 @@ from time import gmtime, strftime
 
 #import unittest so old guise
 import unittest2 as unittest
+import logging
 
 from time import sleep
 import datetime
@@ -44,8 +45,9 @@ class ApiFactory:
 class Waiter:
     @classmethod
     def waitUntil(cls,condition, attempts=10):
-        print "waiting..." + condition.__name__
-        for _ in range(attempts):
+        logging.debug("waiting...for " + condition.__name__)
+        for attempt in range(attempts):
+            logging.debug("attempt {0} of {1}".format(attempt, attempts))
             sleep(1)
             if condition():
                 return True
