@@ -177,7 +177,6 @@ class ProductInfoTest(TestBase):
         self.assertTrue(re.match(r'\d',str(version.get_build())), "major version could not be obtained")
         self.assertTrue(re.match(r'\d',str(version.get_revision())), "major version could not be obtained")
 
-    
 
 class TestVolume(unittest.TestCase):
     def setUp(self):
@@ -219,6 +218,24 @@ class TestVolume(unittest.TestCase):
         vol = FixtureFactory().create_volume(self.cluster, volparams)
         vol.delete()
 
+    def test_add_brick(self):
+        vol = self.__create_distributed_volume_params('test-add-brick')
+
+        new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(self.host2.id))
+        vol.bricks.add(new_bricks)
+        vol.delete()
+
+    def __create_distributed_volume_params(self, name):
+        bricks = ParamFactory().create_bricks()
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host.id))
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host2.id))
+        volparams = ParamFactory().create_volume(bricks, name)
+        return FixtureFactory().create_volume(self.cluster, volparams)
+
+
+
 
 if __name__ == '__main__':
-            unittest.main()
+        unittest.main()
