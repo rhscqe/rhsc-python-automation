@@ -4,6 +4,7 @@ from ovirtsdk.xml import params
 from ovirtsdk.api import API
 from ovirtsdk.infrastructure.brokers import ClusterGlusterVolumes
 from time import gmtime, strftime
+from random import randint
 
 
 #VERSION = params.Version(major='3', minor='1')
@@ -29,6 +30,7 @@ from time import gmtime, strftime
 #import unittest so old guise
 import unittest2 as unittest
 import logging
+logging.basicConfig(level=logging.DEBUG)
 
 from time import sleep
 import datetime
@@ -69,6 +71,10 @@ class Waiter:
         return host.get_status().get_state() == 'maintenance'
 
 class ParamFactory:
+    
+    def generate_brick_dir(self):
+        return "{0}-{1}".format(datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f"),randint(0,10000))  
+
     def create_datacenter(self, name="mydatacenter", description="hi", storage_type="posixfs", version=None):
         version = version or self.create_version()
         return params.DataCenter(name=name, description=description, storage_type=storage_type, version=version)
@@ -91,7 +97,8 @@ class ParamFactory:
     def create_host(self, cluster_broker,name, host, root_password="redhat"):
         return params.Host(name=name, address=host, cluster=cluster_broker, root_password="redhat" )
 
-    def create_brick(self,host_id,dir=datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f")):
+    def create_brick(self,host_id,dir=None):
+        dir = dir or self.generate_brick_dir()
         return params.GlusterBrick(server_id=host_id, brick_dir=dir)
 
     def create_bricks(self,*bricks):
@@ -101,7 +108,7 @@ class ParamFactory:
         return result
 
     def create_volume(self,bricks, name, volume_type="DISTRIBUTE"):
-        return params.GlusterVolume(name=name, volume_type="DISTRIBUTE", bricks=bricks)
+        return params.GlusterVolume(name=name, volume_type=volume_type, bricks=bricks)
 
 class Datacenter:
     @classmethod
@@ -159,22 +166,36 @@ class TestVolume(unittest.TestCase):
         self.cluster    = FixtureFactory().create_cluster(self.api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
         self.host       = FixtureFactory().create_host_and_wait_for_host_up(self.api, ParamFactory().create_host(self.cluster,"myhost","rhevm-sf101-node-a"))
         self.host2       = FixtureFactory().create_host_and_wait_for_host_up(self.api, ParamFactory().create_host(self.cluster,"myhost2","rhevm-sf101-node-b"))
-        self.assertEqual(Host.refresh(self.host1).get_status().get_state(), "up")
-        self.assertEqual(Host.refresh(self.host2).get_status().get_state(), "up")
+        self.assertEqual(Host.refresh(self.api,self.host).get_status().get_state(), "up")
+        self.assertEqual(Host.refresh(self.api,self.host2).get_status().get_state(), "up")
 
     def tearDown(self):
-        Host.stop_and_wait_for_status_maintanence(api,host)
-        self.host.delete()
-        Host.stop_and_wait_for_status_maintanence(api,host2)
-        self.host2.delete()
-        self.cluster.delete()
-        self.datacenter.delete()
+        #Host.stop_and_wait_for_status_maintanence(api,host)
+        #self.host.delete()
+        #Host.stop_and_wait_for_status_maintanence(api,host2)
+        #self.host2.delete()
+        #self.cluster.delete()
+        #self.datacenter.delete()
         self.api.disconnect()
 
     def test_create_distributed_volume(self):
-        brick = ParamFactory().create_brick(self.host.id)
-        bricks = ParamFactory().create_bricks(brick)
+        bricks = ParamFactory().create_bricks()
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host.id))
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host2.id))
         volparams = ParamFactory().create_volume(bricks,'myvol2')
+        vol = FixtureFactory().create_volume(self.cluster, volparams)
+        vol.delete()
+
+    def test_create_replicated_volume(self):
+        bricks = ParamFactory().create_bricks()
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host.id))
+        for _ in range(4):
+            bricks.add_brick(ParamFactory().create_brick(self.host2.id))
+        volparams = ParamFactory().create_volume(bricks,'rep-vol',"REPLICATE")
+        volparams.set_replica_count(8)
         vol = FixtureFactory().create_volume(self.cluster, volparams)
         vol.delete()
 
