@@ -1,6 +1,6 @@
 
 from ovirtsdk.xml import params
-
+from ovirtsdk.infrastructure.errors import RequestError
 from ovirtsdk.api import API
 from ovirtsdk.infrastructure.brokers import ClusterGlusterVolumes
 from time import gmtime, strftime
@@ -207,6 +207,23 @@ class TestVolume(unittest.TestCase):
         vol = FixtureFactory().create_volume(self.cluster, volparams)
         vol.delete()
 
+    def test_negative_create_distributed_volume_with_bricks_from_another(self):
+        vol = None
+        existing_volum = None
+        try:
+            existing_volum = self.__create_distributed_volume('existing-volume')
+            import pdb; pdb.set_trace()
+            existing_brick = existing_volum.bricks.list()[0]
+
+            bricks = self.__create_param_bricks(self.host.id, 7)
+            bricks.append(ParamFactory().create_brick(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
+            self.assertRaisesRegexp(RequestError,'.*already in use.*',
+                    lambda: FixtureFactory().create_volume(self.cluster, ParamFactory().create_volume(ParamFactory().create_bricks(*bricks),'existing-brick-negative-volume')))
+        finally:
+            existing_volum and existing_volum.delete()
+            vol and vol.delete()
+
+
     def test_create_replicated_volume(self):
         bricks = ParamFactory().create_bricks()
         for _ in range(4):
@@ -219,11 +236,17 @@ class TestVolume(unittest.TestCase):
         vol.delete()
 
     def test_add_brick(self):
-        vol = self.__create_distributed_volume_params('test-add-brick')
+        vol = self.__create_distributed_volume('test-add-brick')
 
         new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(self.host2.id))
         vol.bricks.add(new_bricks)
         vol.delete()
+
+    def __create_param_bricks(self,host_id,num_bricks):
+        result = []
+        for _ in range(num_bricks):
+            result.append(ParamFactory().create_brick(host_id))
+        return result
 
     def __create_distributed_volume_params(self, name):
         bricks = ParamFactory().create_bricks()
@@ -232,7 +255,10 @@ class TestVolume(unittest.TestCase):
         for _ in range(4):
             bricks.add_brick(ParamFactory().create_brick(self.host2.id))
         volparams = ParamFactory().create_volume(bricks, name)
-        return FixtureFactory().create_volume(self.cluster, volparams)
+        return volparams
+
+    def __create_distributed_volume(self, name):
+        return FixtureFactory().create_volume(self.cluster, self.__create_distributed_volume_params(name))
 
 
 
