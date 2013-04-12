@@ -3,19 +3,20 @@ from fixture.fixtures        import FixtureFactory
 from factories.param_factory import ParamFactory
 from repository.repositories import HostRepository
 from ovirtsdk.infrastructure.errors import RequestError
+from config.config import Config 
 
 class TestVolume(TestBase):
     def setUp(self):
         super(TestVolume, self).setUp()
-        self.datacenter = FixtureFactory().create_datacenter(self.api)
-        self.cluster    = FixtureFactory().create_cluster(self.api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
-        self.host       = FixtureFactory().create_host_and_wait_for_host_up(self.api, ParamFactory().create_host(self.cluster,"myhost","rhevm-sf101-node-a"))
-        self.host2       = FixtureFactory().create_host_and_wait_for_host_up(self.api, ParamFactory().create_host(self.cluster,"myhost2","rhevm-sf101-node-b"))
-        self.assertEqual(HostRepository.refresh(self.api,self.host).get_status().get_state(), "up")
-        self.assertEqual(HostRepository.refresh(self.api,self.host2).get_status().get_state(), "up")
+        self.host = FixtureFactory().create_host_all_from_host(self.api, Config.get_instance().get_host_by_name('myhost')).host
+        result = FixtureFactory().create_host_all_from_host(self.api, Config.get_instance().get_host_by_name('myhost2'))
+        self.host2 = result.host
+        self.cluster = result.cluster
+
 
     def tearDown(self):
         super(TestVolume, self).tearDown()
+
         #Host.stop_and_wait_for_status_maintanence(api,host)
         #self.host.delete()
         #Host.stop_and_wait_for_status_maintanence(api,host2)
@@ -28,7 +29,6 @@ class TestVolume(TestBase):
         existing_volum = None
         try:
             existing_volum = self.__create_distributed_volume('existing-volume')
-            import pdb; pdb.set_trace()
             existing_brick = existing_volum.bricks.list()[0]
 
             bricks = self.__create_param_bricks(self.host.id, 7)

@@ -1,5 +1,8 @@
 
 from ovirtsdk.xml import params
+from ovirtsdk.xml import params
+from ovirtsdk.infrastructure.errors import RequestError
+from ovirtsdk.api import API
 from time import gmtime, strftime
 import datetime
 from random import randint
@@ -21,14 +24,19 @@ class ParamFactory:
     def create_cpu(self,id='Intel SandyBridge Family'):
         return params.CPU(id=id)
 
-    def create_cluster(self, name="mycluster", cpu=None, datacenter_broker=None, version=None, virt_service=False, gluster_service=True):
+    def create_cluster(self, name="mycluster", cpu=None, datacenter=None, datacenter_broker=None, version=None, virt_service=False, gluster_service=True):
         version = version or self.create_version()
         cpu = cpu or self.create_cpu()
-        datacenter_param = self.create_datacenter_from(datacenter_broker) if datacenter_broker else None
+        if(datacenter):
+            datacenter_param = datacenter
+        elif (datacenter_broker):
+            datacenter_param = self.create_datacenter_from(datacenter_broker)
+        else:
+            datacenter_param= None
         return params.Cluster(name="mycluster", cpu=cpu, data_center=datacenter_param, version=version, virt_service=virt_service, gluster_service=gluster_service)
 
-    def create_host(self, cluster_broker,name, host, root_password="redhat"):
-        return params.Host(name=name, address=host, cluster=cluster_broker, root_password="redhat" )
+    def create_host(self, cluster,name, host, root_password="redhat"):
+        return params.Host(name=name, address=host, cluster=cluster, root_password="redhat" )
 
     def create_brick(self,host_id,dir=None):
         dir = dir or self.generate_brick_dir()

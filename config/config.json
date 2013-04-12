@@ -1,0 +1,76 @@
+{
+    "py/object": "config.config.Config",
+    "cluster": {
+        "py/object": "config.config.Cluster",
+        "args": {
+            "virt_service": false,
+            "cpu": {
+                "id": "Intel SandyBridge Family"
+            },
+            "name": "mycluster",
+            "gluster_service": true
+        },
+        "creation": null,
+        "extras": {
+            "datacenter": {
+                "py/object": "config.config.Datacenter",
+                "args": {
+                    "storage_type": "posixfs",
+                    "description": "a description",
+                    "name": "mydatacenter"
+                },
+                "creation": null,
+                "extras": {
+                    "version": {
+                        "py/object": "config.config.Version",
+                        "args": {
+                            "major": "3",
+                            "minor": "1"
+                        },
+                        "creation": null,
+                        "extras": {}
+                    }
+                }
+            },
+            "version": {
+                "py/id": 3
+            }
+        }
+    },
+    "version": {
+        "py/id": 3
+    },
+    "hosts": [
+        {
+            "py/object": "config.config.Host",
+            "args": {
+                "host": "rhevm-sf101-node-a",
+                "name": "myhost",
+                "root_password": "CHANGEME", //TODO change me
+            },
+            "creation": null,
+            "extras": {
+                "cluster": {
+                    "py/id": 1
+                }
+            }
+        },
+        {
+            "py/object": "config.config.Host",
+            "args": {
+                "host": "rhevm-sf101-node-a",
+                "name": "myhost2",
+                "root_password": "CHANGEME", //TODO change me
+            },
+            "creation": null,
+            "extras": {
+                "cluster": {
+                    "py/id": 1
+                }
+            }
+        }
+    ],
+    "datacenter": {
+        "py/id": 2
+    }
+}
