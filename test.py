@@ -71,7 +71,6 @@ class Waiter:
         return host.get_status().get_state() == 'maintenance'
 
 class ParamFactory:
-    
     def generate_brick_dir(self):
         return "{0}-{1}".format(datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f"),randint(0,10000))  
 
@@ -110,17 +109,17 @@ class ParamFactory:
     def create_volume(self,bricks, name, volume_type="DISTRIBUTE"):
         return params.GlusterVolume(name=name, volume_type=volume_type, bricks=bricks)
 
-class Datacenter:
+class DatacenterRepository:
     @classmethod
     def create(cls,api,params=ParamFactory().create_datacenter()):
         return api.datacenters.add(params) 
 
-class Cluster:
+class ClusterRepository:
     @classmethod
     def create(cls,api,params=ParamFactory().create_cluster()):
         return api.clusters.add(params)
 
-class Host:
+class HostRepository:
     @classmethod
     def create(cls,api,params):
         return api.hosts.add(params) 
@@ -134,7 +133,7 @@ class Host:
         host.deactivate()
         Waiter.waitUntil(lambda : Waiter.host_is_maintanence(api,host), 200)
 
-class Volume:
+class VolumeRepository:
     @classmethod
     def create(cls,cluster,params):
         return cluster.glustervolumes.add(params)
@@ -142,13 +141,13 @@ class Volume:
 
 class FixtureFactory:
     def create_datacenter(self,api,params=ParamFactory().create_datacenter()):
-        return api.datacenters.get(params.get_name()) or Datacenter.create(api,params)
+        return api.datacenters.get(params.get_name()) or DatacenterRepository.create(api,params)
 
     def create_cluster(self,api,params=ParamFactory().create_cluster()):
-        return api.clusters.get(params.get_name()) or Cluster.create(api,params)
+        return api.clusters.get(params.get_name()) or ClusterRepository.create(api,params)
 
     def create_host(self,api, params):
-        return api.hosts.get(params.get_name()) or Host.create(api,params)
+        return api.hosts.get(params.get_name()) or HostRepository.create(api,params)
 
     def create_host_and_wait_for_host_up(self,api, params):
         host = self.create_host(api,params)
@@ -156,7 +155,7 @@ class FixtureFactory:
         return host
 
     def create_volume(self,cluster,params):
-        return Volume.create(cluster,params)
+        return VolumeRepository.create(cluster,params)
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -178,9 +177,9 @@ class ProductInfoTest(TestBase):
         self.assertTrue(re.match(r'\d',str(version.get_revision())), "major version could not be obtained")
 
 
-class TestVolume(unittest.TestCase):
+class TestVolume(TestBase):
     def setUp(self):
-        self.api        = ApiFactory().get_api()
+        super(TestVolume, self).setUp()
         self.datacenter = FixtureFactory().create_datacenter(self.api)
         self.cluster    = FixtureFactory().create_cluster(self.api,params=ParamFactory().create_cluster(datacenter_broker=self.datacenter))
         self.host       = FixtureFactory().create_host_and_wait_for_host_up(self.api, ParamFactory().create_host(self.cluster,"myhost","rhevm-sf101-node-a"))
@@ -189,23 +188,13 @@ class TestVolume(unittest.TestCase):
         self.assertEqual(Host.refresh(self.api,self.host2).get_status().get_state(), "up")
 
     def tearDown(self):
+        super(TestVolume, self).tearDown()
         #Host.stop_and_wait_for_status_maintanence(api,host)
         #self.host.delete()
         #Host.stop_and_wait_for_status_maintanence(api,host2)
         #self.host2.delete()
         #self.cluster.delete()
         #self.datacenter.delete()
-        self.api.disconnect()
-
-    def test_create_distributed_volume(self):
-        bricks = ParamFactory().create_bricks()
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(self.host.id))
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(self.host2.id))
-        volparams = ParamFactory().create_volume(bricks,'myvol2')
-        vol = FixtureFactory().create_volume(self.cluster, volparams)
-        vol.delete()
 
     def test_negative_create_distributed_volume_with_bricks_from_another(self):
         vol = None
@@ -223,6 +212,16 @@ class TestVolume(unittest.TestCase):
             existing_volum and existing_volum.delete()
             vol and vol.delete()
 
+
+    def test_create_distributed_volume(self):
+       bricks = ParamFactory().create_bricks()
+       for _ in range(4):
+           bricks.add_brick(ParamFactory().create_brick(self.host.id))
+       for _ in range(4):
+           bricks.add_brick(ParamFactory().create_brick(self.host2.id))
+       volparams = ParamFactory().create_volume(bricks,'myvol2')
+       vol = FixtureFactory().create_volume(self.cluster, volparams)
+       vol.delete()
 
     def test_create_replicated_volume(self):
         bricks = ParamFactory().create_bricks()
@@ -263,5 +262,3 @@ class TestVolume(unittest.TestCase):
 
 
 
-if __name__ == '__main__':
-        unittest.main()
