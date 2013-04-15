@@ -4,11 +4,8 @@
         "py/object": "config.config.Cluster",
         "args": {
             "virt_service": false,
-            "cpu": {
-                "id": "Intel SandyBridge Family"
-            },
-            "name": "mycluster",
-            "gluster_service": true
+            "gluster_service": true,
+            "name": "mycluster"
         },
         "creation": null,
         "extras": {
@@ -33,12 +30,20 @@
                 }
             },
             "version": {
-                "py/id": 3
+                "py/id": 4
+            },
+            "cpu": {
+                "py/object": "config.config.CPU",
+                "args": {
+                    "id": "Intel SandyBridge Family"
+                },
+                "creation": null,
+                "extras": {}
             }
         }
     },
     "version": {
-        "py/id": 3
+        "py/id": 4
     },
     "hosts": [
         {
@@ -58,7 +63,7 @@
         {
             "py/object": "config.config.Host",
             "args": {
-                "host": "rhevm-sf101-node-a",
+                "host": "rhevm-sf101-node-b",
                 "name": "myhost2",
                 "root_password": "CHANGEME", //TODO change me
             },
@@ -71,6 +76,6 @@
         }
     ],
     "datacenter": {
-        "py/id": 2
+        "py/id": 3
     }
 }

@@ -53,6 +53,13 @@ class Cluster(Item):
     def create(self):
         return ParamFactory().create_cluster(**self.compiled_args())
 
+class CPU(Item):
+    def __init__(self,args,extras={}):
+        Item.__init__(self,args,extras )
+
+    def create(self):
+        return ParamFactory().create_cpu(**self.compiled_args())
+
 class Host(Item):
     def __init__(self,args,extras={}):
         Item.__init__(self,args,extras )
@@ -66,8 +73,8 @@ class Config:
     def __init__(self):
         self.version = Version({'major':'3', 'minor':'1'})
         self.datacenter = Datacenter({'name':'mydatacenter', 'description':'a description', 'storage_type':'posixfs'} ,{'version':self.version})
-        cpu = {'id':'Intel SandyBridge Family'}
-        self.cluster = Cluster({'name':"mycluster", 'cpu':cpu, 'virt_service':False, 'gluster_service':True} , { 'datacenter':self.datacenter , 'version':self.version})
+        cpu = CPU({'id':'Intel SandyBridge Family'})
+        self.cluster = Cluster({'name':"mycluster", 'virt_service':False, 'gluster_service':True} , { 'datacenter':self.datacenter , 'version':self.version, 'cpu': cpu })
         self.hosts = []
         self.hosts.append( Host({'name':'myhost', 'host':'rhevm-sf101-node-a', 'root_password':"CHANGEME"}, {'cluster':self.cluster}))
         self.hosts.append( Host({'name':'myhost2', 'host':'rhevm-sf101-node-a', 'root_password':"CHANGEME"}, {'cluster':self.cluster}))
@@ -89,10 +96,10 @@ class Config:
         return Config.from_json(json)
 
 
-#if __name__ == "__main__":
-#
-#    json =  Config().to_json()
-#    print json
+if __name__ == "__main__":
+
+    json =  Config().to_json()
+    print json
 #    #print Config().from_json(json).datacenter.create()
 #    import pdb; pdb.set_trace()
 #    print Config().from_json(json).hosts[0].create().get_cluster().get_data_center().get_name()
