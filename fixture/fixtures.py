@@ -21,7 +21,6 @@ class FixtureFactory:
         return api.clusters.get(params.get_name()) or ClusterRepository.create(api,params)
 
     def create_host(self,api, params):
-        import pdb; pdb.set_trace()
         return api.hosts.get(params.get_name()) or HostRepository.create(api,params)
 
     def create_host_all_from_host(self,api, params):
