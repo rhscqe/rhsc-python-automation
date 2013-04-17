@@ -17,8 +17,12 @@ class HostRepository:
         return api.hosts.add(params) 
 
     @classmethod 
-    def refresh(cls,api,host):
+    def show(cls,api,host):
         return api.hosts.get(id=host.id)
+
+    @classmethod 
+    def refresh(cls,api,host):
+        return cls.show(api,host)
 
     @classmethod 
     def stop_and_wait_for_status_maintanence(cls,api,host):
