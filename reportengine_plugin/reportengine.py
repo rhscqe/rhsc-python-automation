@@ -47,7 +47,7 @@ class ReportEngine(Plugin):
 
     def startTestRun(self, event):
         log.info('Hello pluginized world!')
-        self.process = subprocess.Popen("java -jar reportengineforwarder.jar", stdout=subprocess.PIPE, 
+        self.process = subprocess.Popen("java -jar reportengine_plugin/reportengineforwarder.jar", stdout=subprocess.PIPE, 
                                        shell=True, preexec_fn=os.setsid) 
         if(self.is_process_running(self.process.pid)):
             log.info('report engine forwarder started')
