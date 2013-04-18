@@ -54,6 +54,8 @@ class ReportEngine(Plugin):
         else:
             log.info('report engine forwarder could not be started')
         self.api = ReportEngineForwarderApi()
+
+        sleep(2)
         self.api.createReport("RHEVM-PYTHON_SDK-INTEGRATION")
         self.api.createTestGroup()
 
