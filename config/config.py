@@ -71,6 +71,7 @@ class Host(Item):
 
 class Config:
     def __init__(self):
+        self.rest_api= {'url':'https://localhost:443/api', 'credentials': {'username':'admin@internal', 'password':'CHANGEME'}}
         self.version = Version({'major':'3', 'minor':'1'})
         self.datacenter = Datacenter({'name':'mydatacenter', 'description':'a description', 'storage_type':'posixfs'} ,{'version':self.version})
         cpu = CPU({'id':'Intel SandyBridge Family'})

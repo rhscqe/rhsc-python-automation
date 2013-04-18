@@ -6,5 +6,5 @@ class ApiFactory:
         api_actions(api)
         api.close
 
-    def get_api(self):
-        return API(url='https://localhost:443', username='admin@internal', password='redhat',insecure=True )
+    def get_api(self,url='https://localhost:443', username='admin@internal', password='redhat',insecure=True ):
+        return API(url=url, username=username, password=password,insecure=insecure)

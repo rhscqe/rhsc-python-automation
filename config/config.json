@@ -1,5 +1,13 @@
 {
-    "py/object": "config.config.Config",
+   "py/object": "config.config.Config",
+
+   "rest_api": {
+        "url": "https://rhevm-sf9:443/api",
+        "username": "admin@internal",
+        "password": "CHANGEME", //TODO changeme
+        "insecure": true
+    },
+
     "cluster": {
         "py/object": "config.config.Cluster",
         "args": {
