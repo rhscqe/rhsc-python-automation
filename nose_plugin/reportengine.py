@@ -18,7 +18,6 @@ class ReportEngineForwarderApi:
         self.base = base #scheme and authority
 
     def get(self,path_and_query):
-        import pdb; pdb.set_trace()
         return requests.get(self.base + path_and_query)
 
     def createReport(self,name):
@@ -55,7 +54,6 @@ class ReportEngine(Plugin):
         else:
             log.info('report engine forwarder could not be started')
         self.api = ReportEngineForwarderApi()
-        import pdb; pdb.set_trace()
         self.api.createReport("RHEVM-PYTHON_SDK-INTEGRATION")
         self.api.createTestGroup()
 
@@ -69,15 +67,12 @@ class ReportEngine(Plugin):
         test = event.test
         name = test.__module__ + "." + test.__class__.__name__ + ":" +  test._testMethodName
         self.api.startTest(name)
-        print 'startTest'
 
     def stopTest(self, event):
         if(event.result.wasSuccessful()):
             self.api.passTest()
-            print 'success'
         else:
             self.api.failTest()
-            print 'fail'
 
 
     def is_process_running(self,process_id):
