@@ -15,7 +15,6 @@ class TestVolume(TestBase):
         cls.cluster = result.cluster
         cls.datacenter = result.datacenter
 
-
     @classmethod
     def tearDownClass(cls):
         HostRepository.stop_and_wait_for_status_maintanence(cls.api,cls.host)
@@ -25,22 +24,6 @@ class TestVolume(TestBase):
         cls.cluster.delete()
         cls.datacenter.delete()
         super(TestVolume,cls).tearDownClass()
-
-    def test_negative_create_distributed_volume_with_bricks_from_another(self):
-        vol = None
-        existing_volum = None
-        try:
-            existing_volum = self.__create_distributed_volume('existing-volume')
-            existing_brick = existing_volum.bricks.list()[0]
-
-            bricks = self.__create_param_bricks(TestVolume.host.id, 7)
-            bricks.append(ParamFactory().create_brick(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
-            self.assertRaisesRegexp(RequestError,'.*already in use.*',
-                    lambda: FixtureFactory().create_volume(TestVolume.cluster, ParamFactory().create_volume(ParamFactory().create_bricks(*bricks),'existing-brick-negative-volume')))
-        finally:
-            existing_volum and existing_volum.delete()
-            vol and vol.delete()
-
 
     def test_create_distributed_volume(self):
        bricks = ParamFactory().create_bricks()
@@ -64,19 +47,34 @@ class TestVolume(TestBase):
         vol.delete()
 
     def test_add_brick(self):
-        vol = self.__create_distributed_volume('test-add-brick')
+        vol = self._create_distributed_volume('test-add-brick')
 
         new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(TestVolume.host2.id))
         vol.bricks.add(new_bricks)
         vol.delete()
 
-    def __create_param_bricks(self,host_id,num_bricks):
+    def test_negative_create_distributed_volume_with_bricks_from_another(self):
+        vol = None
+        existing_volum = None
+        try:
+            existing_volum = self._create_distributed_volume('existing-volume')
+            existing_brick = existing_volum.bricks.list()[0]
+
+            bricks = self._create_param_bricks(TestVolume.host.id, 7)
+            bricks.append(ParamFactory().create_brick(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
+            self.assertRaisesRegexp(RequestError,'.*already in use.*',
+                    lambda: FixtureFactory().create_volume(TestVolume.cluster, ParamFactory().create_volume(ParamFactory().create_bricks(*bricks),'existing-brick-negative-volume')))
+        finally:
+            existing_volum and existing_volum.delete()
+            vol and vol.delete()
+
+    def _create_param_bricks(self,host_id,num_bricks):
         result = []
         for _ in range(num_bricks):
             result.append(ParamFactory().create_brick(host_id))
         return result
 
-    def __create_distributed_volume_params(self, name):
+    def _create_distributed_volume_params(self, name):
         bricks = ParamFactory().create_bricks()
         for _ in range(4):
             bricks.add_brick(ParamFactory().create_brick(TestVolume.host.id))
@@ -85,5 +83,6 @@ class TestVolume(TestBase):
         volparams = ParamFactory().create_volume(bricks, name)
         return volparams
 
-    def __create_distributed_volume(self, name):
-        return FixtureFactory().create_volume(TestVolume.cluster, self.__create_distributed_volume_params(name))
+    def _create_distributed_volume(self, name):
+        return FixtureFactory().create_volume(TestVolume.cluster, self._create_distributed_volume_params(name))
+
