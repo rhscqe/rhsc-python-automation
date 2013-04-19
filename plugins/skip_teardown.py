@@ -19,9 +19,12 @@ class SkipTeardown(Plugin):
     commandLineSwitch = (None, 'skipTeardown', 'Skipping Teardowns')
 
     def startTest(self, event):
-        def tearDown(cls):
+        def tearDown(self):
             print "skip teardown"
+        def tearDownClass(cls):
+            print "skip teardown class"
         event.test.tearDown=types.MethodType(tearDown,event.test)
+        event.test.tearDownClass=types.MethodType(tearDownClass,event.test)
 
 
 
