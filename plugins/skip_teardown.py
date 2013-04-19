@@ -11,7 +11,7 @@ import types
 
 from nose2.events import Plugin
 
-log = logging.getLogger('prevent-teardown')
+log = logging.getLogger('skip-teardown')
 
 
 class SkipTeardown(Plugin):
@@ -20,11 +20,11 @@ class SkipTeardown(Plugin):
 
     def startTest(self, event):
         def tearDown(self):
-            print "skip teardown"
+            log.info("skip teardown")
         def tearDownClass(cls):
-            print "skip teardown class"
+            log.info("skip tearDownClass")
         event.test.tearDown=types.MethodType(tearDown,event.test)
-        event.test.tearDownClass=types.MethodType(tearDownClass,event.test)
+        event.test.__class__.tearDownClass=types.MethodType(tearDownClass,event.test.__class__)
 
 
 
