@@ -15,8 +15,8 @@ log = logging.getLogger('skip-teardown')
 
 
 class SkipTeardown(Plugin):
-    #configSection = 'helloworld'
-    commandLineSwitch = (None, 'skipTeardown', 'Skipping Teardowns')
+    configSection = 'skip-teardown'
+    commandLineSwitch = (None, 'skip-teardown', 'Skipping Teardowns')
 
     def startTest(self, event):
         def tearDown(self):
