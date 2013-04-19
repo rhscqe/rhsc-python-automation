@@ -7,6 +7,7 @@ class TestBase(unittest.TestCase):
     def setUpClass(cls):
         cls.api = ApiFactory().get_api(**Config.get_instance().rest_api)
 
+
     @classmethod
     def tearDownClass(cls):
         cls.api.disconnect()

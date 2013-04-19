@@ -1,36 +1,65 @@
 from helpers.waiter import Waiter
 from factories.param_factory import ParamFactory
 
-class DatacenterRepository:
-    @classmethod
-    def create(cls,api,params=ParamFactory().create_datacenter()):
-        return api.datacenters.add(params) 
+class Repository:
+    def __init__(self,api):
+        self.api = api
 
-class ClusterRepository:
-    @classmethod
-    def create(cls,api,params=ParamFactory().create_cluster()):
-        return api.clusters.add(params)
+class DatacenterRepository(Repository):
+    def __init__(self,api):
+        Repository.__init__(self,api)
 
-class HostRepository:
-    @classmethod
-    def create(cls,api,params):
-        return api.hosts.add(params) 
+    def create(self,params=ParamFactory().create_datacenter()):
+        return self.api.datacenters.add(params) 
 
-    @classmethod 
-    def show(cls,api,host):
-        return api.hosts.get(id=host.id)
+    def show(self, datacenter):
+        return self.api.datacenters.get(datacenter.get_name()) 
 
-    @classmethod 
-    def refresh(cls,api,host):
-        return cls.show(api,host)
+    def destroy(self, datacenter):
+        datacenter_broker = self.show(datacenter)
+        datacenter_broker.delete()
 
-    @classmethod 
-    def stop_and_wait_for_status_maintanence(cls,api,host):
-        host.deactivate()
-        Waiter.waitUntil(lambda : Waiter.host_is_maintanence(api,host), 200)
+class ClusterRepository(Repository):
+    def __init__(self,api):
+        Repository.__init__(self,api)
 
-class VolumeRepository:
-    @classmethod
-    def create(cls,cluster,params):
-        return cluster.glustervolumes.add(params)
+    def show(self, cluster):
+        return self.api.clusters.get(cluster.get_name())
+
+    def create(self,params=ParamFactory().create_cluster()):
+        return self.api.clusters.add(params)
+
+    def destroy(self,cluster):
+        cluster_broker = self.show(cluster)
+        return cluster_broker.delete()
+class HostRepository(Repository):
+    def __init__(self,api):
+        Repository.__init__(self,api)
+
+    def create(self,params):
+        return self.api.hosts.add(params) 
+
+    def show(self,host):
+        return self.api.hosts.get(id=host.id)
+
+    def refresh(self, host):
+        return self.show(self.api,host)
+
+    def destroy(self, host):
+        host_broker = self.show(host)
+        host_broker.delete()
+
+    def deactivate(self,host):
+        host_broker = self.show(host)
+        host_broker.deactivate()
+
+class VolumeRepository(Repository):
+    def __init__(self,api):
+        Repository.__init__(self,api)
+
+    def create(self,cluster,params):
+        cluster_broker = ClusterRepository(self.api).show(cluster)
+        return cluster_broker.glustervolumes.add(params)
+
+
 

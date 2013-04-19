@@ -14,25 +14,32 @@ class ReturnAll:
     
 
 class FixtureFactory:
-    def create_datacenter(self,api,params=ParamFactory().create_datacenter()):
-        return api.datacenters.get(params.get_name()) or DatacenterRepository.create(api,params)
+    def __init__(self,api):
+        self.api = api
 
-    def create_cluster(self,api,params=ParamFactory().create_cluster()):
-        return api.clusters.get(params.get_name()) or ClusterRepository.create(api,params)
+    def create_datacenter(self,datacenter=ParamFactory().create_datacenter()):
+        return DatacenterRepository(self.api).show(datacenter) or DatacenterRepository(self.api).create(datacenter)
 
-    def create_host(self,api, params):
-        return api.hosts.get(params.get_name()) or HostRepository.create(api,params)
+    def create_cluster(self,params=ParamFactory().create_cluster()):
+        return ClusterRepository(self.api).show(params) or ClusterRepository(self.api).create(params)
 
-    def create_host_all_from_host(self,api, params):
-        datacenter = self.create_datacenter(api, params.get_cluster().get_data_center())
-        cluster = self.create_cluster(api, params.get_cluster())
-        host = self.create_host_and_wait_for_host_up(api,params)
+    def create_host(self, params):
+        return self.api.hosts.get(params.get_name()) or HostRepository(self.api).create(params)
+
+    def create_host_all_from_host(self,params):
+        datacenter = self.create_datacenter( params.get_cluster().get_data_center())
+        cluster = self.create_cluster(params.get_cluster())
+        host = self.create_host_and_wait_for_host_up(params)
         return ReturnAll(datacenter,cluster,host) 
 
-    def create_host_and_wait_for_host_up(self,api, params):
-        host = self.create_host(api,params)
-        Waiter.waitUntil(lambda : Waiter.host_is_up(api,host), 400)
+    def create_host_and_wait_for_host_up(self, params):
+        host = self.create_host(params)
+        Waiter.waitUntil(lambda : Waiter.host_is_up(self.api,host), 400)
         return host
 
+    def deactivate_host_and_wait_for_maintanence(self,host):
+        HostRepository(self.api).deactivate(host)
+        Waiter.waitUntil(lambda : Waiter.host_is_maintanence(self.api,host), 200)
+
     def create_volume(self,cluster,params):
-        return VolumeRepository.create(cluster,params)
+        return VolumeRepository(self.api).create(cluster,params)
