@@ -7,14 +7,14 @@ from repository.repositories import HostRepository
 from repository.repositories import VolumeRepository
 from factories.param_factory import ParamFactory
 from ovirtsdk.infrastructure.errors import RequestError
-from config.config import Config 
+from config.config import Config
 
 class TestVolume(TestBase):
     @classmethod
     def setUpClass(cls):
         super(TestVolume,cls).setUpClass()
-        cls.host = FixtureFactory(cls.api).create_host_all_from_host(Config.get_instance().get_host_by_name('myhost')).host
-        result = FixtureFactory(cls.api).create_host_all_from_host(Config.get_instance().get_host_by_name('myhost2'))
+        cls.host = FixtureFactory(cls.api).create_host_with_depends(Config.get_instance().hosts[0].create()).host
+        result = FixtureFactory(cls.api).create_host_with_depends(Config.get_instance().hosts[1].create())
         cls.host2 = result.host
         cls.cluster = result.cluster
         cls.datacenter = result.datacenter

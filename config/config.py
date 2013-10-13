@@ -66,21 +66,21 @@ class Host(Item):
 
 class Config:
     def __init__(self):
-        self.rest_api = {'url': 'https://localhost:443/api', 'credentials':
-                         {'username': 'admin@internal', 'password': 'CHANGEME'}}
+        self.rest_api = {'url': 'https://latest:443/api', 'username': 'admin@internal', 'password': 'CHANGEME'}
         self.version = Version({'major': '3', 'minor': '1'})
         self.datacenter = Datacenter({'name': 'mydatacenter',
                                       'description': 'a description', 'storage_type': 'posixfs'}, {'version': self.version})
         cpu = CPU({'id': 'Intel SandyBridge Family'})
         self.cluster = Cluster({'name': "mycluster", 'virt_service': False, 'gluster_service': True}, {'datacenter': self.datacenter, 'version': self.version, 'cpu':  cpu})
         self.hosts = []
-        self.hosts.append(Host({'name': 'myhost', 'host': 'rhevm-sf101-node-a', 'root_password': "CHANGEME"}, {'cluster': self.cluster}))
-        self.hosts.append(Host({'name': 'myhost2', 'host': 'rhevm-sf101-node-a', 'root_password': "CHANGEME"}, {'cluster': self.cluster}))
+        self.hosts.append(Host({'name': 'node-a', 'host': 'latest-a', 'root_password': "CHANGEME"}, {'cluster': self.cluster}))
+        self.hosts.append(Host({'name': 'node-b', 'host': 'latest-b', 'root_password': "CHANGEME"}, {'cluster': self.cluster}))
 
     def to_json(self):
         return jsonpickle.encode(self)
 
     def get_host_by_name(self, name):
+        import pdb; pdb.set_trace()
         return filter(lambda x: x.compiled_args()['name'] == name, self.hosts)[0].create()
 
     @classmethod
@@ -94,7 +94,7 @@ class Config:
 
 
 if __name__ == "__main__":
-    json = Config().to_json()
+    json = jsonpickle.encode(Config())
     print json
 #    #print Config().from_json(json).datacenter.create()
 #    import pdb; pdb.set_trace()

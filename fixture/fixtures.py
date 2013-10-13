@@ -11,7 +11,7 @@ class ReturnAll:
         self.datacenter=datacenter
         self.cluster=cluster
         self.host=host
-    
+
 
 class FixtureFactory:
     def __init__(self,api):
@@ -26,11 +26,11 @@ class FixtureFactory:
     def create_host(self, params):
         return self.api.hosts.get(params.get_name()) or HostRepository(self.api).create(params)
 
-    def create_host_all_from_host(self,params):
+    def create_host_with_depends(self,params):
         datacenter = self.create_datacenter( params.get_cluster().get_data_center())
         cluster = self.create_cluster(params.get_cluster())
         host = self.create_host_and_wait_for_host_up(params)
-        return ReturnAll(datacenter,cluster,host) 
+        return ReturnAll(datacenter,cluster,host)
 
     def create_host_and_wait_for_host_up(self, params):
         host = self.create_host(params)
