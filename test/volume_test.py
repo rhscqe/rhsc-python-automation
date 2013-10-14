@@ -66,7 +66,7 @@ class TestVolume(TestBase):
 
             bricks = self._create_param_bricks(TestVolume.host.id, 7)
             bricks.append(ParamFactory().create_brick(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
-            self.assertRaisesRegexp(RequestError,'.*already in use.*',
+            self.assertRaisesRegexp(RequestError,'.*already used.*',
                     lambda: FixtureFactory(self.api).create_volume(TestVolume.cluster, ParamFactory().create_volume(ParamFactory().create_bricks(*bricks),'existing-brick-negative-volume')))
         finally:
             existing_volum and existing_volum.delete()
