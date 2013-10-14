@@ -9,7 +9,7 @@ from random import randint
 
 class ParamFactory:
     def generate_brick_dir(self):
-        return "{0}-{1}".format(datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f"),randint(0,10000))  
+        return "{0}-{1}".format(datetime.datetime.now().strftime("/tmp/brick%y%m%d%H%M%S%f"),randint(0,10000))
 
     def create_datacenter(self, name="mydatacenter", description="hi", storage_type="posixfs", version=None):
         version = version or self.create_version()
@@ -36,7 +36,7 @@ class ParamFactory:
         return params.Cluster(name="mycluster", cpu=cpu, data_center=datacenter_param, version=version, virt_service=virt_service, gluster_service=gluster_service)
 
     def create_host(self, cluster,name, host, root_password="redhat"):
-        return params.Host(name=name, address=host, cluster=cluster, root_password="redhat" )
+        return params.Host(name=name, address=host, cluster=cluster, root_password="redhat", reboot_after_installation=False )
 
     def create_brick(self,host_id,dir=None):
         dir = dir or self.generate_brick_dir()

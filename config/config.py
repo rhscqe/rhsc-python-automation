@@ -68,7 +68,7 @@ class Config:
     def __init__(self):
         self.rest_api = {'url': 'https://latest:443/api', 'username': 'admin@internal', 'password': 'CHANGEME'}
         self.version = Version({'major': '3', 'minor': '1'})
-        self.datacenter = Datacenter({'name': 'mydatacenter',
+        self.datacenter = Datacenter({'name': 'Default',
                                       'description': 'a description', 'storage_type': 'posixfs'}, {'version': self.version})
         cpu = CPU({'id': 'Intel SandyBridge Family'})
         self.cluster = Cluster({'name': "mycluster", 'virt_service': False, 'gluster_service': True}, {'datacenter': self.datacenter, 'version': self.version, 'cpu':  cpu})
