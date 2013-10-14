@@ -54,8 +54,12 @@ class TestVolume(TestBase):
         vol = self._create_distributed_volume('test-add-brick')
 
         new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(TestVolume.host2.id))
-        vol.bricks.add(new_bricks)
-        vol.delete()
+        try:
+            vol.bricks.add(new_bricks)
+        except Exception as e:
+            vol.delete()
+            raise 
+
 
     def test_negative_create_distributed_volume_with_bricks_from_another(self):
         vol = None
