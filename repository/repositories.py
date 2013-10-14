@@ -10,14 +10,17 @@ class DatacenterRepository(Repository):
         Repository.__init__(self,api)
 
     def create(self,params=ParamFactory().create_datacenter()):
-        return self.api.datacenters.add(params) 
+        if('datcenters' in dir(self.api)):
+            return self.api.datacenters.add(params)
 
     def show(self, datacenter):
-        return self.api.datacenters.get(datacenter.get_name()) 
+        if('datcenters' in dir(self.api)):
+            return self.api.datacenters.get(datacenter.get_name())
 
     def destroy(self, datacenter):
-        datacenter_broker = self.show(datacenter)
-        datacenter_broker.delete()
+        if('datcenters' in dir(self.api)):
+            datacenter_broker = self.show(datacenter)
+            datacenter_broker.delete()
 
 class ClusterRepository(Repository):
     def __init__(self,api):
@@ -37,7 +40,7 @@ class HostRepository(Repository):
         Repository.__init__(self,api)
 
     def create(self,params):
-        return self.api.hosts.add(params) 
+        return self.api.hosts.add(params)
 
     def show(self,host):
         return self.api.hosts.get(id=host.id)
