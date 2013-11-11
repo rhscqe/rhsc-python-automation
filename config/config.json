@@ -18,7 +18,7 @@
             "datacenter": {
                 "args": {
                     "description": "a description", 
-                    "name": "mydatacenter", 
+                    "name": "Default", 
                     "storage_type": "posixfs"
                 }, 
                 "creation": null, 
@@ -47,7 +47,7 @@
     "hosts": [
         {
             "args": {
-                "host": "latest-a", 
+               "host": "latest-u1-a",
                 "name": "node-a", 
                 "root_password": "CHANGEME" //TODO
             }, 
@@ -61,7 +61,7 @@
         }, 
         {
             "args": {
-                "host": "latest-b", 
+               "host": "latest-u1-b",
                 "name": "node-b", 
                 "root_password": "CHANGEME" //TODO
             }, 

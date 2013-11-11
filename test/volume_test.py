@@ -30,14 +30,14 @@ class TestVolume(TestBase):
         super(TestVolume,cls).tearDownClass()
 
     def test_create_distributed_volume(self):
-       bricks = ParamFactory().create_bricks()
-       for _ in range(4):
+        bricks = ParamFactory().create_bricks()
+        for _ in range(4):
            bricks.add_brick(ParamFactory().create_brick(TestVolume.host.id))
-       for _ in range(4):
+        for _ in range(4):
            bricks.add_brick(ParamFactory().create_brick(TestVolume.host2.id))
-       volparams = ParamFactory().create_volume(bricks,'myvol2')
-       vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
-       vol.delete()
+        volparams = ParamFactory().create_volume(bricks,'myvol2')
+        vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
+        vol.delete()
 
     def test_create_replicated_volume(self):
         bricks = ParamFactory().create_bricks()
@@ -55,10 +55,17 @@ class TestVolume(TestBase):
 
         new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(TestVolume.host2.id))
         try:
+        # import pdb; pdb.set_trace()
+        # from ovirtsdk.xml import params
+        # brick = params.GlusterBrick(brick_dir="/tmp/blah123123123", server_id=TestVolume.host2.id)
+        # brick_params = params.GlusterBricks()
+        # brick_params.add_brick(brick)
+            # vol.bricks.add(brick_params)
             vol.bricks.add(new_bricks)
         except Exception as e:
-            vol.delete()
             raise 
+        finally:
+            vol.delete()
 
 
     def test_negative_create_distributed_volume_with_bricks_from_another(self):

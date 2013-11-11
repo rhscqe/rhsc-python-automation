@@ -1,6 +1,5 @@
 
 from ovirtsdk.xml import params
-from ovirtsdk.xml import params
 from ovirtsdk.infrastructure.errors import RequestError
 from ovirtsdk.api import API
 from time import gmtime, strftime
