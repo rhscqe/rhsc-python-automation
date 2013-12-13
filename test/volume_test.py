@@ -8,6 +8,7 @@ from repository.repositories import VolumeRepository
 from factories.param_factory import ParamFactory
 from ovirtsdk.infrastructure.errors import RequestError
 from config.config import Config
+from helpers.tcms import tcms
 
 class TestVolume(TestBase):
     @classmethod
@@ -50,6 +51,7 @@ class TestVolume(TestBase):
         vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
         vol.delete()
 
+    @tcms(327430)
     def test_add_brick(self):
         vol = self._create_distributed_volume('test-add-brick')
 
