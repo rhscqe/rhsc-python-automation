@@ -26,7 +26,7 @@
                     "version": {
                         "args": {
                             "major": "3", 
-                            "minor": "1"
+                            "minor": "3"
                         }, 
                         "creation": null, 
                         "extras": {}, 
@@ -47,7 +47,7 @@
     "hosts": [
         {
             "args": {
-               "host": "latest-u1-a",
+               "host": "latest-a",
                 "name": "node-a", 
                 "root_password": "CHANGEME" //TODO
             }, 
@@ -61,7 +61,7 @@
         }, 
         {
             "args": {
-               "host": "latest-u1-b",
+               "host": "latest-b",
                 "name": "node-b", 
                 "root_password": "CHANGEME" //TODO
             }, 

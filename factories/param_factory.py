@@ -6,9 +6,18 @@ from time import gmtime, strftime
 import datetime
 from random import randint
 
-class ParamFactory:
+class BrickFactory:
+    def __init__(self, base_dir="/bricks"):
+        self.base_dir = base_dir
+
     def generate_brick_dir(self):
-        return "{0}-{1}".format(datetime.datetime.now().strftime("/bricks/brick%y%m%d%H%M%S%f"),randint(0,10000))
+        return "{0}-{1}".format(datetime.datetime.now().strftime(self.base_dir + "/brick%y%m%d%H%M%S%f"),randint(0,10000))
+
+    def create(self,host_id,dir=None):
+        dir = dir or self.generate_brick_dir()
+        return params.GlusterBrick(server_id=host_id, brick_dir=dir)
+
+class ParamFactory:
 
     def create_datacenter(self, name="mydatacenter", description="hi", storage_type="posixfs", version=None):
         version = version or self.create_version()
@@ -37,9 +46,6 @@ class ParamFactory:
     def create_host(self, cluster,name, host, root_password="redhat"):
         return params.Host(name=name, address=host, cluster=cluster, root_password="redhat", reboot_after_installation=False )
 
-    def create_brick(self,host_id,dir=None):
-        dir = dir or self.generate_brick_dir()
-        return params.GlusterBrick(server_id=host_id, brick_dir=dir)
 
     def create_bricks(self,*bricks):
         result = params.GlusterBricks()
@@ -47,5 +53,5 @@ class ParamFactory:
             result.add_brick(brick)
         return result
 
-    def create_volume(self,bricks, name, volume_type="DISTRIBUTE"):
-        return params.GlusterVolume(name=name, volume_type=volume_type, bricks=bricks)
+    def create_volume(self,**kwargs):
+        return params.GlusterVolume(**kwargs)

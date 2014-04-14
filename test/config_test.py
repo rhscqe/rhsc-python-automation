@@ -9,5 +9,4 @@ class ConfigTest(unittest.TestCase):
         self.assertEquals(config.rest_api, Config().rest_api)
 
     def test_get_instance(self):
-        import pdb; pdb.set_trace()
         Config.get_instance().rest_api

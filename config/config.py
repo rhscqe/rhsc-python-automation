@@ -80,7 +80,6 @@ class Config:
         return jsonpickle.encode(self)
 
     def get_host_by_name(self, name):
-        import pdb; pdb.set_trace()
         return filter(lambda x: x.compiled_args()['name'] == name, self.hosts)[0].create()
 
     @classmethod

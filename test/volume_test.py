@@ -6,6 +6,8 @@ from repository.repositories import ClusterRepository
 from repository.repositories import HostRepository
 from repository.repositories import VolumeRepository
 from factories.param_factory import ParamFactory
+from factories.param_factory import BrickFactory
+from factories.volume_factory import VolumeFactory
 from ovirtsdk.infrastructure.errors import RequestError
 from config.config import Config
 from helpers.tcms import tcms
@@ -17,6 +19,7 @@ class TestVolume(TestBase):
         cls.host = FixtureFactory(cls.api).create_host_with_depends(Config.get_instance().hosts[0].create()).host
         result = FixtureFactory(cls.api).create_host_with_depends(Config.get_instance().hosts[1].create())
         cls.host2 = result.host
+        cls.hosts = [cls.host, cls.host2]
         cls.cluster = result.cluster
         cls.datacenter = result.datacenter
 
@@ -31,41 +34,26 @@ class TestVolume(TestBase):
         super(TestVolume,cls).tearDownClass()
 
     def test_create_distributed_volume(self):
-        bricks = ParamFactory().create_bricks()
-        for _ in range(4):
-           bricks.add_brick(ParamFactory().create_brick(TestVolume.host.id))
-        for _ in range(4):
-           bricks.add_brick(ParamFactory().create_brick(TestVolume.host2.id))
-        volparams = ParamFactory().create_volume(bricks,'myvol2')
+        volparams = VolumeFactory().create_distributed_volume("myvol", TestVolume.hosts, 8 )
         vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
         vol.delete()
 
     def test_create_replicated_volume(self):
-        bricks = ParamFactory().create_bricks()
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(TestVolume.host.id))
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(TestVolume.host2.id))
-        volparams = ParamFactory().create_volume(bricks,'rep-vol',"REPLICATE")
-        volparams.set_replica_count(8)
+        volparams = VolumeFactory().create_distributed_replicate_volume("myvol", TestVolume.hosts, 8, 2 )
         vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
         vol.delete()
 
     @tcms(327430)
     def test_add_brick(self):
-        vol = self._create_distributed_volume('test-add-brick')
-
-        new_bricks= ParamFactory().create_bricks(ParamFactory().create_brick(TestVolume.host2.id))
+        volparams = VolumeFactory().create_distributed_volume("myvol", TestVolume.hosts, 8 )
+        vol = FixtureFactory(self.api).create_volume(TestVolume.cluster, volparams)
         try:
-        # import pdb; pdb.set_trace()
-        # from ovirtsdk.xml import params
-        # brick = params.GlusterBrick(brick_dir="/tmp/blah123123123", server_id=TestVolume.host2.id)
-        # brick_params = params.GlusterBricks()
-        # brick_params.add_brick(brick)
-            # vol.bricks.add(brick_params)
-            vol.bricks.add(new_bricks)
+            bricks = ParamFactory().create_bricks()
+            new_brick= BrickFactory().create(TestVolume.host2.id)
+            bricks.add_brick(new_brick)
+            vol.bricks.add(bricks)
         except Exception as e:
-            raise 
+            raise
         finally:
             vol.delete()
 
@@ -74,32 +62,16 @@ class TestVolume(TestBase):
         vol = None
         existing_volum = None
         try:
-            existing_volum = self._create_distributed_volume('existing-volume')
+            existing_volume_params = VolumeFactory().create_distributed_volume("existing-volume", TestVolume.hosts, 8 )
+            existing_volum = FixtureFactory(self.api).create_volume(TestVolume.cluster, existing_volume_params)
             existing_brick = existing_volum.bricks.list()[0]
 
-            bricks = self._create_param_bricks(TestVolume.host.id, 7)
-            bricks.append(ParamFactory().create_brick(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
+            bricks = VolumeFactory().create_bricks(TestVolume.hosts, 7)
+            bricks.add_brick( BrickFactory().create(existing_brick.get_server_id(),existing_brick.get_brick_dir()))
+            new_volume_params =  VolumeFactory().create_distributed_volume("new-volume", TestVolume.hosts, 8 )
+            new_volume_params.set_bricks(bricks)
             self.assertRaisesRegexp(RequestError,'.*already used.*',
-                    lambda: FixtureFactory(self.api).create_volume(TestVolume.cluster, ParamFactory().create_volume(ParamFactory().create_bricks(*bricks),'existing-brick-negative-volume')))
+                    lambda: FixtureFactory(self.api).create_volume(TestVolume.cluster, new_volume_params))
         finally:
             existing_volum and existing_volum.delete()
             vol and vol.delete()
-
-    def _create_param_bricks(self,host_id,num_bricks):
-        result = []
-        for _ in range(num_bricks):
-            result.append(ParamFactory().create_brick(host_id))
-        return result
-
-    def _create_distributed_volume_params(self, name):
-        bricks = ParamFactory().create_bricks()
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(TestVolume.host.id))
-        for _ in range(4):
-            bricks.add_brick(ParamFactory().create_brick(TestVolume.host2.id))
-        volparams = ParamFactory().create_volume(bricks, name)
-        return volparams
-
-    def _create_distributed_volume(self, name):
-        return FixtureFactory(self.api).create_volume(TestVolume.cluster, self._create_distributed_volume_params(name))
-
