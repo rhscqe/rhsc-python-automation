@@ -1,9 +1,11 @@
-
 Environment
-------------
+----------
+Test Environment Under Test
 * RHS-C instance
 * 2 RHS nodes
-* rhsc-cli installed
+
+Test Run Environment (fine to run where RHS-C is installed)
+* rhsc-sdk package installed
 * >= Python 2.6 
 
 Config
